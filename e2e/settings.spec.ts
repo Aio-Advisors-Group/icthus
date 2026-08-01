@@ -32,7 +32,10 @@ test.describe('You and Icthus Everywhere', () => {
     await expect(page.getByRole('link', { name: /Lock Screen widget/ })).toContainText(
       'Future native extension',
     );
-    await expect(page.getByRole('link', { name: /Slack/ })).toContainText('Connected');
+    // A credential-gated destination must not read "Connected" in a browse
+    // list, where it would look like a statement of current state.
+    await expect(page.getByRole('link', { name: /Slack/ })).toContainText('Needs connecting');
+    await expect(page.getByRole('link', { name: /Notion/ })).not.toContainText(/^Connected$/);
   });
 
   test('a ready-to-share destination cannot be scheduled to send automatically', async ({

@@ -424,3 +424,16 @@ export const CAPABILITY_BADGE: Record<CapabilityClass, string> = {
   ready_to_share: 'Ready to share',
   future_native: 'Future native extension',
 };
+
+/**
+ * Badge text for the *catalog*, where nothing has been set up yet.
+ *
+ * `connected` deliberately reads "Needs connecting" here rather than
+ * "Connected": in a browse list, the class name alone would look like a
+ * statement that the destination is already live, which is the exact
+ * misreading this catalog exists to prevent.
+ */
+export const CAPABILITY_CATALOG_BADGE: Record<CapabilityClass, string> = {
+  ...CAPABILITY_BADGE,
+  connected: 'Needs connecting',
+};

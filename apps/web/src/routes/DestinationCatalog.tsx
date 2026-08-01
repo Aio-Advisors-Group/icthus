@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { CAPABILITY_BADGE, CAPABILITY_SPECS, destinationsByGroup } from '@icthus/core';
+import { CAPABILITY_CATALOG_BADGE, CAPABILITY_SPECS, destinationsByGroup } from '@icthus/core';
 import { SubPageHeader } from '../components/AppShell';
 import { Badge, Muted, Notice } from '../components/ui';
 
@@ -39,7 +39,11 @@ export default function DestinationCatalog(): ReactNode {
           <ul className="m-0 list-none p-0">
             {group.items.map((destination) => {
               const capability = CAPABILITY_SPECS[destination.capability];
-              const automatable = capability.allowedDeliveryModes.includes('automatic');
+              // Green is reserved for what is genuinely already live. A
+              // credential-gated destination is not, however capable it is.
+              const alreadyLive =
+                capability.allowedDeliveryModes.includes('automatic') &&
+                !capability.requiresCredentials;
               return (
                 <li key={destination.id}>
                   <Link
@@ -64,12 +68,12 @@ export default function DestinationCatalog(): ReactNode {
                       tone={
                         destination.capability === 'future_native'
                           ? 'warn'
-                          : automatable
+                          : alreadyLive
                             ? 'ok'
                             : 'neutral'
                       }
                     >
-                      {CAPABILITY_BADGE[destination.capability]}
+                      {CAPABILITY_CATALOG_BADGE[destination.capability]}
                     </Badge>
                   </Link>
                 </li>
