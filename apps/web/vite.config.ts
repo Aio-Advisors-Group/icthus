@@ -10,6 +10,10 @@ const basePath = process.env.ICTHUS_BASE_PATH ?? '/';
 
 export default defineConfig({
   base: basePath,
+  // Vite defaults envDir to this config's directory (apps/web). The repo keeps
+  // .env and .env.example at the monorepo root — where .gitignore excludes
+  // them — so point Vite there or a root .env is silently ignored.
+  envDir: fileURLToPath(new URL('../../', import.meta.url)),
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

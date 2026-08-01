@@ -12,24 +12,52 @@ here is optional in the sense that the contest requires YouVersion and Gloo.
 
 **Console:** https://platform.youversion.com/platform/get-started
 
-### What to request
+### Registration steps
 
-- An application registered to the Icthus project.
-- Scopes covering Bible **version metadata** and **passage text retrieval**.
-- Confirmation of which translations the licence permits displaying, and
-  whether full passage text may be shown or only a reference plus an approved
-  preview and link.
-- The caching policy: how long passage text may be stored, and whether it may
-  be persisted at all.
-- Attribution and branding requirements — exact copyright line, placement, and
-  any required link back.
+Verified against YouVersion's own sign-up documentation, July 2026:
 
-### Redirect URLs (if an OAuth flow is required)
+1. Go to https://platform.youversion.com and choose **Join the YouVersion
+   Platform**.
+2. Sign in with a **YouVersion account** (the same login as the Bible app). One
+   is required — there is no separate developer account.
+3. Choose **Organization** or **Individual**, then supply the contact and
+   address details requested.
+4. Register the application. YouVersion issues an **`app_key`**, which also
+   serves as the OAuth `client_id`.
+5. Set the application's **callback URL** (see below).
+
+> **Eligibility constraint — read this before submitting.** YouVersion permits
+> **non-commercial use only**: no advertisements, no paywalls, no
+> subscriptions. They state that they promise users an ad-free experience, and
+> they reserve the right to revoke access from applications that do not align
+> with their mission.
+>
+> Icthus complies as built — it is Apache-2.0, has no ads, no paywall, and no
+> subscription — and this must stay true for the integration to survive.
+
+### Callback URL to register
 
 ```
 https://bahrcompany.github.io/icthus/auth/callback
+```
+
+Add the local one too if their console accepts multiple:
+
+```
 http://localhost:5173/auth/callback
 ```
+
+### Still to confirm with YouVersion
+
+The public docs do not settle these, and they change what the adapter may do:
+
+- Which translations the licence permits **displaying in full**, versus
+  reference-plus-link only.
+- The **caching policy** — how long passage text may be stored, if at all.
+- The exact **attribution** line, its required placement, and any link back.
+
+Until these are answered, keep `VITE_FEATURE_YOUVERSION` off and stay on the
+public-domain corpus. That path is fully working and carries no licence risk.
 
 ### Secrets
 
@@ -70,13 +98,27 @@ contract tests against the real provider before enabling the flag.
 
 **Console:** https://studio.ai.gloo.com/
 
+> **Not to be confused with "Gloo Edge" / "Gloo Gateway" from solo.io.** Those
+> are an unrelated company's API gateway products and share only the name.
+> Searching for "Gloo API docs" mostly returns those. The provider Icthus
+> integrates with is the faith-technology Gloo at `studio.ai.gloo.com`.
+
 ### What to request
 
-- An OAuth 2.0 **client credentials** application.
-- The token endpoint URL and API base URL.
-- Approved scopes for the values-aligned AI / retrieval capability Icthus uses.
+Credentials live under the API keys / credentials area of Gloo Studio, not in
+the usage dashboard. Ask their team for:
+
+- An OAuth 2.0 **client credentials** application (client ID + secret).
+- The **token endpoint URL** and **API base URL**.
+- Approved **scopes** for the values-aligned AI / retrieval capability.
 - Written confirmation of what may be sent, retained, and logged on their side.
 - Whether any contest-specific capability applies.
+
+If the Gloo Studio dashboard itself errors while loading (for example the
+`/usage` page returning "Something went wrong"), that is a fault on Gloo's side
+and unrelated to Icthus. Use their **Contact support** link — Icthus makes no
+requests to Gloo at all until `GLOO_CLIENT_ID` and `GLOO_CLIENT_SECRET` are set
+as Edge Function secrets.
 
 ### Secrets
 
