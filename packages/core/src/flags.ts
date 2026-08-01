@@ -76,24 +76,25 @@ export function describeIntegrations(flags: FeatureFlags): IntegrationHealth[] {
     {
       id: 'youversion',
       label: 'YouVersion Platform',
-      state: flags.youversion ? 'live' : 'mock',
-      detail: flags.youversion
-        ? 'Passages come from the YouVersion Platform API with its approved translations.'
-        : 'Passages come from the built-in World English Bible corpus, which is public domain.',
+      // A browser flag cannot prove that the server-side adapter successfully
+      // called a licensed provider. The current web composition root always
+      // uses the local fallback, so this stays truthful until runtime health is
+      // returned from an authenticated Edge Function.
+      state: 'mock',
+      detail: 'Passages come from the built-in World English Bible corpus, which is public domain.',
       blockedBy: flags.youversion
-        ? null
+        ? 'The YouVersion server adapter is awaiting approved endpoint configuration and a verified runtime health check.'
         : 'A registered YouVersion Platform app, approved content scopes, and an API key.',
       docsUrl: 'https://platform.youversion.com/platform/get-started',
     },
     {
       id: 'gloo',
       label: 'Gloo AI Studio',
-      state: flags.gloo ? 'live' : 'mock',
-      detail: flags.gloo
-        ? 'The Daily Devotional Companion sends its bounded question to Gloo AI Studio.'
-        : 'The Daily Devotional Companion runs against a local adapter. No request leaves this device.',
+      state: 'mock',
+      detail:
+        'The interactive companion runs against a local adapter. Scheduled server runs use Gloo only after consent and a verified provider call.',
       blockedBy: flags.gloo
-        ? null
+        ? 'The browser continues to use its local fallback; verify a scheduled Gloo run before presenting it as live.'
         : 'Gloo AI Studio OAuth 2.0 client credentials and an approved capability scope.',
       docsUrl: 'https://studio.ai.gloo.com/',
     },

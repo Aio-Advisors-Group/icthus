@@ -123,42 +123,117 @@ export type GlooConfig = {
   clientId: string;
   clientSecret: string;
   scopes: readonly string[];
+  /** Optional Gloo Completions V2 tradition parameter. */
+  tradition?: 'evangelical' | 'catholic' | 'mainline';
   fetchImpl?: typeof fetch;
 };
 
 /**
  * Gloo AI Studio adapter.
  *
- * Left unimplemented against guessed endpoints on purpose: shipping a
- * plausible-looking request that has never run is worse than an explicit gap,
- * because it looks integrated in review and fails in production. The OAuth
- * shape and required variable names are documented in docs/PROVIDER_SETUP.md;
- * fill in the endpoints from Gloo's official docs once the app is approved.
+ * This adapter follows Gloo's documented Completions V2 OAuth contract. It is
+ * deliberately server-only: client credentials must never be put in a Vite
+ * environment variable or instantiated in the browser.
  */
 export class GlooStudioProvider implements FaithConnectionProvider {
   readonly id = 'gloo';
-  readonly state: ProviderState = 'unavailable';
+  readonly state: ProviderState = 'live';
+  private token: { value: string; expiresAt: number } | null = null;
 
   constructor(private readonly config: GlooConfig) {}
 
-  async ask(_request: GlooRequest, now: Date = new Date()): Promise<GlooResponse> {
-    return {
-      answer: '',
-      citations: [],
-      providerState: 'unavailable',
-      modelVersion: null,
-      receivedAt: now.toISOString(),
-      errorCode: 'gloo_not_configured',
-    };
+  private fetch(): typeof fetch {
+    if (this.config.fetchImpl) return this.config.fetchImpl;
+    if (typeof fetch !== 'undefined') return fetch;
+    throw new Error('No fetch implementation is available for Gloo');
+  }
+
+  private async accessToken(now: Date): Promise<string> {
+    if (this.token && this.token.expiresAt > now.getTime() + 60_000) return this.token.value;
+
+    const credentials = btoa(`${this.config.clientId}:${this.config.clientSecret}`);
+    const response = await this.fetch()(this.config.tokenUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        scope: this.config.scopes.join(' ') || 'api/access',
+      }),
+    });
+    if (!response.ok) throw new Error(`Gloo token request failed (${response.status})`);
+    const payload = (await response.json()) as { access_token?: unknown; expires_in?: unknown };
+    if (typeof payload.access_token !== 'string' || payload.access_token.length === 0) {
+      throw new Error('Gloo token response did not include an access token');
+    }
+    const expiresIn = typeof payload.expires_in === 'number' ? payload.expires_in : 3600;
+    this.token = { value: payload.access_token, expiresAt: now.getTime() + expiresIn * 1000 };
+    return this.token.value;
+  }
+
+  async ask(request: GlooRequest, now: Date = new Date()): Promise<GlooResponse> {
+    try {
+      const token = await this.accessToken(now);
+      const response = await this.fetch()(
+        `${this.config.apiBaseUrl.replace(/\/$/, '')}/chat/completions`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are a humble Christian study companion. Stay grounded in the supplied passage. Do not claim divine instruction, diagnose, provide crisis advice, or invent sources. Give a concise, invitation-framed response.',
+              },
+              { role: 'user', content: request.question },
+            ],
+            auto_routing: true,
+            ...(this.config.tradition ? { tradition: this.config.tradition } : {}),
+            stream: false,
+          }),
+        },
+      );
+      if (!response.ok) throw new Error(`Gloo completion request failed (${response.status})`);
+      const payload = (await response.json()) as {
+        model?: unknown;
+        choices?: { message?: { content?: unknown } }[];
+      };
+      const answer = payload.choices?.[0]?.message?.content;
+      if (typeof answer !== 'string' || answer.trim().length === 0) {
+        throw new Error('Gloo completion response did not include content');
+      }
+      return {
+        answer: answer.trim(),
+        citations: [
+          { label: `${request.passageReference} (${request.translationAbbreviation})`, url: null },
+        ],
+        providerState: 'live',
+        modelVersion: typeof payload.model === 'string' ? payload.model : null,
+        receivedAt: now.toISOString(),
+        errorCode: null,
+      };
+    } catch {
+      return {
+        answer: '',
+        citations: [],
+        providerState: 'unavailable',
+        modelVersion: null,
+        receivedAt: now.toISOString(),
+        errorCode: 'gloo_request_failed',
+      };
+    }
   }
 
   async connectionCard(): Promise<ConnectionCard> {
     return {
       title: 'Find support in a local church community',
-      body: 'The Gloo connection is not configured, so Icthus has nothing specific to offer here.',
+      body: 'Icthus does not recommend specific churches. When you are ready, a local congregation is a good place to bring what you have been reflecting on.',
       actionLabel: 'Read how Icthus thinks about this',
       actionUrl: null,
-      providerState: 'unavailable',
+      providerState: 'live',
     };
   }
 

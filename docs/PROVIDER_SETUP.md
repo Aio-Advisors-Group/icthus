@@ -62,21 +62,23 @@ public-domain corpus. That path is fully working and carries no licence risk.
 ### Secrets
 
 ```bash
-supabase secrets set YOUVERSION_APP_ID=...
-supabase secrets set YOUVERSION_API_KEY=...
+supabase secrets set YOUVERSION_APP_KEY=...
 supabase secrets set YOUVERSION_API_BASE_URL=...
 supabase secrets set YOUVERSION_DEFAULT_VERSION_ID=...
 ```
 
-Then set the repository variable `VITE_FEATURE_YOUVERSION=true`.
+Do not enable `VITE_FEATURE_YOUVERSION` merely because secrets exist. The app
+must first receive a successful runtime health result from the server adapter;
+until then, it truthfully remains on the local public-domain corpus.
 
 ### Implementation
 
 `packages/core/src/providers/scripture.ts` → `YouVersionScriptureProvider`.
 
 Every method currently throws a descriptive "not configured" error. That is
-deliberate: the class is not implemented against guessed endpoints, because
-code that looks integrated and has never run is worse than an explicit gap.
+deliberate: the public get-started page does not disclose the authenticated API
+endpoint contract, and code written against inferred routes would be a false
+integration.
 
 Fill in the four methods from the official documentation. The rest of the app
 needs no changes — it only knows the `ScriptureProvider` interface. Run the
@@ -130,7 +132,10 @@ supabase secrets set GLOO_API_BASE_URL=...
 supabase secrets set GLOO_SCOPES=...
 ```
 
-Then set `VITE_FEATURE_GLOO=true`.
+The scheduled and authenticated manual-run paths now use the documented token
+endpoint and Completions V2 endpoint once these secrets are deployed. The
+browser remains on its local fallback unless a successful server run is
+recorded; do not present a browser feature flag as proof that Gloo is live.
 
 **The client secret must only ever exist in Supabase Edge Function secrets.** It
 must never appear in a `VITE_`-prefixed variable, because those are compiled
@@ -139,7 +144,10 @@ into the JavaScript bundle and are readable by anyone who opens the page.
 ### Implementation
 
 `packages/core/src/providers/gloo.ts` → `GlooStudioProvider`, and the
-server-side path in `supabase/functions/daily-companion-run/index.ts`.
+server-side path in `supabase/functions/daily-companion-run/index.ts`. Both
+use OAuth2 client credentials, cache tokens with a one-minute refresh buffer,
+and call Gloo's documented `/ai/v2/chat/completions` endpoint with
+`auto_routing: true`.
 
 Two invariants must survive the implementation:
 

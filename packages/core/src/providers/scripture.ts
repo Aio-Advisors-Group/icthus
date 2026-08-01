@@ -81,54 +81,135 @@ export class LocalScriptureProvider implements ScriptureProvider {
 export type YouVersionConfig = {
   /** Injected server-side only. The browser never holds this. */
   apiBaseUrl: string;
-  appId: string;
+  /** App Key sent as X-YVP-App-Key, supplied by the YouVersion Platform. */
+  appKey: string;
   /** Translation the user selected, e.g. a YouVersion version id. */
   versionId: string;
   fetchImpl?: typeof fetch;
 };
 
+type YouVersionBible = {
+  id: number;
+  abbreviation?: string;
+  title?: string;
+  copyright?: string;
+  youversion_deep_link?: string;
+};
+
+type YouVersionPassage = { id?: string; content?: string; reference?: string };
+
+const USFM_BOOK_IDS: Record<string, string> = {
+  Matthew: 'MAT',
+  Psalm: 'PSA',
+  Philippians: 'PHP',
+  Lamentations: 'LAM',
+  Isaiah: 'ISA',
+  '1 Thessalonians': '1TH',
+  James: 'JAS',
+  '1 Corinthians': '1CO',
+  Proverbs: 'PRO',
+  John: 'JHN',
+  Ecclesiastes: 'ECC',
+};
+
+function usfmPassage(entry: CorpusPassage): string {
+  const book = USFM_BOOK_IDS[entry.canonical.book];
+  if (!book) throw new Error(`No USFM book mapping for ${entry.canonical.book}`);
+  const first = `${book}.${entry.canonical.chapter}.${entry.canonical.verseStart}`;
+  return entry.canonical.verseEnd
+    ? `${first}-${book}.${entry.canonical.chapter}.${entry.canonical.verseEnd}`
+    : first;
+}
+
 /**
  * YouVersion Platform adapter.
  *
- * Intentionally unimplemented against a guessed endpoint. Writing a plausible
- * request shape here would produce code that looks integrated and fails in
- * production — worse than an honest gap. The contract tests in
- * `scripture.contract.test.ts` run against whichever provider is configured,
- * so this class only needs its real endpoints filled in once the YouVersion
- * app is approved. See docs/PROVIDER_SETUP.md.
+ * Uses YouVersion's documented REST API: X-YVP-App-Key authentication,
+ * /v1/bibles/{id} for translation metadata, and
+ * /v1/bibles/{id}/passages/{USFM passage} for runtime text. Licensed text is
+ * never committed to the repository or persisted by this adapter.
  */
 export class YouVersionScriptureProvider implements ScriptureProvider {
   readonly id = 'youversion';
-  readonly state: ProviderState = 'unavailable';
+  readonly state: ProviderState = 'live';
+  private bible: YouVersionBible | null = null;
 
   constructor(private readonly config: YouVersionConfig) {}
 
-  private notConfigured(): never {
-    throw new Error(
-      'YouVersion Platform adapter is not configured. Register the app at ' +
-        'https://platform.youversion.com/platform/get-started, then supply the ' +
-        'documented endpoints and credentials via Edge Function secrets.',
+  private fetch(): typeof fetch {
+    if (this.config.fetchImpl) return this.config.fetchImpl;
+    if (typeof fetch !== 'undefined') return fetch;
+    throw new Error('No fetch implementation is available for YouVersion');
+  }
+
+  private async request<T>(path: string): Promise<T> {
+    const response = await this.fetch()(`${this.config.apiBaseUrl.replace(/\/$/, '')}${path}`, {
+      headers: { 'X-YVP-App-Key': this.config.appKey },
+    });
+    if (!response.ok) throw new Error(`YouVersion request failed (${response.status})`);
+    return (await response.json()) as T;
+  }
+
+  private async bibleMetadata(): Promise<YouVersionBible> {
+    if (this.bible) return this.bible;
+    this.bible = await this.request<YouVersionBible>(
+      `/v1/bibles/${encodeURIComponent(this.config.versionId)}`,
     );
+    return this.bible;
   }
 
-  async search(): Promise<ScripturePassage[]> {
-    return this.notConfigured();
+  private async hydrate(entry: CorpusPassage): Promise<ScripturePassage> {
+    const [metadata, remote] = await Promise.all([
+      this.bibleMetadata(),
+      this.request<YouVersionPassage>(
+        `/v1/bibles/${encodeURIComponent(this.config.versionId)}/passages/${encodeURIComponent(usfmPassage(entry))}?format=text&include_headings=false&include_notes=false`,
+      ),
+    ]);
+    if (typeof remote.content !== 'string' || remote.content.trim().length === 0) {
+      throw new Error('YouVersion passage response did not include text');
+    }
+    const title = metadata.title ?? `YouVersion Bible ${this.config.versionId}`;
+    const abbreviation = metadata.abbreviation ?? String(this.config.versionId);
+    return {
+      ...toPassage(entry, this.id, this.state),
+      reference: remote.reference ?? entry.reference,
+      text: remote.content.trim(),
+      translation: {
+        id: String(metadata.id ?? this.config.versionId),
+        name: title,
+        abbreviation,
+        rights: metadata.copyright ?? 'Licensed through YouVersion Platform.',
+      },
+      attribution: metadata.copyright ? `${title} · ${metadata.copyright}` : title,
+      canonicalUrl: metadata.youversion_deep_link ?? null,
+    };
   }
 
-  async getBySourceId(): Promise<ScripturePassage | null> {
-    return this.notConfigured();
+  async search(themes: readonly string[], limit = 3): Promise<ScripturePassage[]> {
+    const ranked = rankPassages(themes);
+    const selected = (ranked.length > 0 ? ranked : SCRIPTURE_CORPUS).slice(0, limit);
+    return Promise.all(selected.map((entry) => this.hydrate(entry)));
   }
 
-  async getByReferenceSlug(): Promise<ScripturePassage | null> {
-    return this.notConfigured();
+  async getBySourceId(sourceId: string): Promise<ScripturePassage | null> {
+    const entry = findPassageBySourceId(sourceId);
+    return entry ? this.hydrate(entry) : null;
   }
 
-  async passageOfTheDay(): Promise<ScripturePassage> {
-    return this.notConfigured();
+  async getByReferenceSlug(slug: string): Promise<ScripturePassage | null> {
+    const entry = findPassageByReferenceSlug(slug);
+    return entry ? this.hydrate(entry) : null;
+  }
+
+  async passageOfTheDay(date: Date): Promise<ScripturePassage> {
+    const dayIndex = Math.floor(date.getTime() / 86_400_000);
+    const entry = SCRIPTURE_CORPUS[dayIndex % SCRIPTURE_CORPUS.length] ?? SCRIPTURE_CORPUS[0];
+    if (!entry) throw new Error('Scripture corpus is empty');
+    return this.hydrate(entry);
   }
 
   describe(): string {
-    return `YouVersion app ${this.config.appId} · version ${this.config.versionId}`;
+    return `YouVersion Bible version ${this.config.versionId}`;
   }
 }
 

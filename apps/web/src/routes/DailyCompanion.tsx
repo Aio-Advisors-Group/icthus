@@ -11,6 +11,7 @@ import {
   type DailyCompanionSettings,
 } from '@icthus/core';
 import { useApp } from '../lib/AppProvider';
+import { supabase } from '../lib/supabase';
 import {
   useCompanionRuns,
   useCompanionSettings,
@@ -30,7 +31,7 @@ import { useToast } from '../components/Toast';
  * answered.
  */
 export default function DailyCompanion(): ReactNode {
-  const { scripture, gloo } = useApp();
+  const { scripture, gloo, session } = useApp();
   const { notify } = useToast();
   const settingsQuery = useCompanionSettings();
   const runsQuery = useCompanionRuns();
@@ -67,6 +68,18 @@ export default function DailyCompanion(): ReactNode {
     if (!settings) return;
     setRunning(true);
     try {
+      // A signed-in account runs through the Edge Function, so Gloo OAuth
+      // credentials and raw entry access remain server-side. Local-only use
+      // deliberately retains the deterministic, offline path below.
+      const client = supabase();
+      if (client && session) {
+        const { error } = await client.functions.invoke('daily-companion-run');
+        if (error) throw new Error(error.message);
+        await runsQuery.refetch();
+        notify('Run complete');
+        return;
+      }
+
       // Only entries from the last day are offered as companion inputs, and
       // only the kinds the person has allowed are read at all.
       const cutoff = Date.now() - 86_400_000;
