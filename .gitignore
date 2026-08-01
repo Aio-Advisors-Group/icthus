@@ -1,0 +1,30 @@
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.tsbuild/
+*.tsbuildinfo
+
+# Environment — names live in .env.example, values never enter git.
+.env
+.env.*
+!.env.example
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+.supabase/
+
+# Test output
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
+npm-debug.log*
