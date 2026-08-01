@@ -78,23 +78,23 @@ Each of these renders its true state in the UI. Nothing here displays as
 
 ## Blocked on you
 
-Two things, both requiring your credentials.
+Two logins. Both CLIs are installed (`gh` 2.97.0, `supabase` 2.111.0); both
+sign-in flows are interactive and cannot be completed for you.
 
-### 1. GitHub — needs auth and one approval
+**Approved target:** `Bahrcompany/icthus`, **public**, deployed to
+`https://bahrcompany.github.io/icthus/`, backed by the existing Supabase
+project `htqqvhxgkqzxcbzcnlzd`.
 
-Neither the `gh` CLI nor a GitHub credential is present on this machine. The
-repository is initialised locally on `main` with six commits and is ready to
-push.
+### 1. GitHub — needs `gh auth login`
 
-```bash
-brew install gh
-```
+The repository is initialised locally on `main` with eight commits and is ready
+to push. Nothing on GitHub has been created, modified, or pushed to.
 
 ```bash
 gh auth login
 ```
 
-Then, **after you approve the repository name and visibility**:
+Then:
 
 ```bash
 cd "icthus" && gh repo create Bahrcompany/icthus --public --source=. --remote=origin --push
@@ -102,23 +102,12 @@ cd "icthus" && gh repo create Bahrcompany/icthus --public --source=. --remote=or
 
 Then enable Pages: repository → Settings → Pages → Source: **GitHub Actions**.
 
-Planned targets, for your approval:
+The first push triggers CI. The Pages deploy only runs after CI passes.
 
-- Repository: `Bahrcompany/icthus`
-- Visibility: **public** (contest / open source)
-- Deployed URL: `https://bahrcompany.github.io/icthus/`
-- Backend: existing Supabase project `htqqvhxgkqzxcbzcnlzd`
+### 2. Supabase — needs `supabase login`
 
-I have not created, modified, or pushed to anything on GitHub.
-
-### 2. Supabase — needs CLI auth
-
-The CLI is not installed and the project is not linked. I have not connected
-to, inspected, or modified project `htqqvhxgkqzxcbzcnlzd` in any way.
-
-```bash
-brew install supabase/tap/supabase
-```
+The project is not linked. It has not been connected to, inspected, or modified
+in any way.
 
 ```bash
 supabase login
@@ -145,8 +134,8 @@ approved.
 
 ## Immediate next steps
 
-1. Approve the repository name and visibility (one answer).
-2. `gh auth login`, then push.
+1. ~~Approve the repository name and visibility.~~ Approved: `Bahrcompany/icthus`, public.
+2. `gh auth login`, then `gh repo create … --push`.
 3. Enable Pages → GitHub Actions.
 4. `supabase login && supabase link`, review migrations, apply.
 5. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as Actions secrets.
