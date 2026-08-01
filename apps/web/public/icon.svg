@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Icthus">
+  <rect width="512" height="512" fill="#fbfaf8"/>
+  <g fill="none" stroke="#a67f3f" stroke-width="23" stroke-linecap="round">
+    <path d="M 106 256 A 215 215 0 0 1 457 179"/>
+    <path d="M 106 256 A 215 215 0 0 0 457 333"/>
+  </g>
+</svg>

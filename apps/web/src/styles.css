@@ -1,0 +1,133 @@
+@import 'tailwindcss';
+
+/**
+ * Icthus design tokens.
+ *
+ * Warm paper, deep ink, one restrained gold accent. The palette comes from the
+ * standalone prototype; the dark variant is a token swap only, so the same
+ * components stay legible at night without changing character.
+ */
+@theme {
+  --color-paper: #fbfaf8;
+  --color-shell: #e7e3dd;
+  --color-surface: #ffffff;
+  --color-sand: #f4efe7;
+  --color-rose: #f6e9e6;
+  --color-ink: #181715;
+  --color-muted: #6b6660;
+  --color-line: #e8e3dc;
+  --color-gold: #8a6829;
+  --color-gold-soft: #a67f3f;
+  --color-moss: #3f6639;
+  --color-clay: #8c3f38;
+
+  --font-serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+  --font-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+
+  --radius-card: 1.25rem;
+  --shadow-paper: 0 12px 32px rgb(52 42 29 / 0.1);
+}
+
+/*
+ * Contrast note: --color-muted and --color-gold were both darkened from the
+ * prototype values (#77736d, #a67f3f) so body-size text clears WCAG AA 4.5:1
+ * against paper. The lighter gold survives as --color-gold-soft for large
+ * display type and non-text ornament only.
+ */
+:root {
+  color-scheme: light dark;
+  --paper: var(--color-paper);
+  --shell: var(--color-shell);
+  --surface: var(--color-surface);
+  --sand: var(--color-sand);
+  --rose: var(--color-rose);
+  --ink: var(--color-ink);
+  --muted: var(--color-muted);
+  --line: var(--color-line);
+  --gold: var(--color-gold);
+  --gold-soft: var(--color-gold-soft);
+  --moss: var(--color-moss);
+  --clay: var(--color-clay);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #17161a;
+    --shell: #0f0e11;
+    --surface: #1f1e23;
+    --sand: #232128;
+    --rose: #2b2226;
+    --ink: #f2efe9;
+    --muted: #a49e96;
+    --line: #33313a;
+    --gold: #d9b370;
+    --gold-soft: #c9a061;
+    --moss: #8fbc85;
+    --clay: #e0918a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--shell);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Every interactive element gets a visible, high-contrast focus ring. */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Utility layer kept deliberately small — tokens do most of the work. */
+@utility ic-serif {
+  font-family: var(--font-serif);
+}
+
+.ic-scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.ic-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* The watermark on the Scripture card: ancient, quiet, decorative only. */
+.ic-watermark::after {
+  content: 'ΙΧΘΥΣ';
+  position: absolute;
+  right: -1rem;
+  bottom: -1.4rem;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 4rem;
+  letter-spacing: 0.05em;
+  color: color-mix(in srgb, var(--gold-soft) 12%, transparent);
+  pointer-events: none;
+}
