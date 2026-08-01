@@ -1,0 +1,76 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # Deployment is gated on a green CI run: the Pages job below will not start
+  # unless lint, typecheck, tests, secret scan, build and E2E all pass.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Build and deploy
+    needs: ci
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build for Pages
+        env:
+          # Pages serves the site from /<repo>/, so the bundle needs a matching
+          # base path or every asset 404s.
+          ICTHUS_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_FEATURE_YOUVERSION: ${{ vars.VITE_FEATURE_YOUVERSION }}
+          VITE_FEATURE_GLOO: ${{ vars.VITE_FEATURE_GLOO }}
+          VITE_FEATURE_COMPANION_LLM: ${{ vars.VITE_FEATURE_COMPANION_LLM }}
+          VITE_FEATURE_TRANSCRIPTION: ${{ vars.VITE_FEATURE_TRANSCRIPTION }}
+          VITE_FEATURE_OCR: ${{ vars.VITE_FEATURE_OCR }}
+          VITE_FEATURE_CONNECTED_DELIVERY: ${{ vars.VITE_FEATURE_CONNECTED_DELIVERY }}
+        run: npm run build
+
+      # Pages has no server-side rewrite. Copying index.html to 404.html makes
+      # a deep-link refresh (e.g. /you/everywhere) load the app instead of a
+      # GitHub 404, and the router then resolves the path client-side.
+      - name: Add SPA fallback
+        run: cp apps/web/dist/index.html apps/web/dist/404.html
+
+      # Prevents Pages from running the output through Jekyll, which would
+      # strip files and directories beginning with an underscore.
+      - name: Disable Jekyll processing
+        run: touch apps/web/dist/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
