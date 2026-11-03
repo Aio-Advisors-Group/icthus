@@ -1,11 +1,11 @@
-# Supabase setup — project `htqqvhxgkqzxcbzcnlzd`
+# Supabase setup — project `drtjcdzwlzevajlubxzc`
 
 This connects Icthus to the **existing** Supabase project. Do not create a
 replacement project. Everything below is additive: it creates objects prefixed
 by Icthus's own domain and does not drop, alter, or read anything else already
 in the project.
 
-Dashboard: https://supabase.com/dashboard/project/htqqvhxgkqzxcbzcnlzd
+Dashboard: https://supabase.com/dashboard/project/drtjcdzwlzevajlubxzc
 
 > **Before you run anything:** open the dashboard and check whether the project
 > already contains tables, buckets, or functions belonging to something else.
@@ -31,7 +31,7 @@ into a chat, a file, or a commit.
 From the repository root:
 
 ```bash
-supabase link --project-ref htqqvhxgkqzxcbzcnlzd
+supabase link --project-ref drtjcdzwlzevajlubxzc
 ```
 
 It will ask for the database password (dashboard → Settings → Database). The
@@ -96,8 +96,8 @@ Dashboard → **Authentication → URL Configuration**:
 
 | Field         | Value                                                                                         |
 | ------------- | --------------------------------------------------------------------------------------------- |
-| Site URL      | `https://bahrcompany.github.io/icthus/`                                                       |
-| Redirect URLs | `https://bahrcompany.github.io/icthus/auth/callback`<br>`http://localhost:5173/auth/callback` |
+| Site URL      | `https://aio-advisors-group.github.io/icthus/`                                                       |
+| Redirect URLs | `https://aio-advisors-group.github.io/icthus/auth/callback`<br>`http://localhost:5173/auth/callback` |
 
 The trailing path matters — the app's callback route is `/auth/callback`
 relative to the Pages base path.
@@ -129,7 +129,7 @@ JWT.
 Names only below — put real values in the command, never in a file.
 
 ```bash
-supabase secrets set ICTHUS_ALLOWED_ORIGINS="https://bahrcompany.github.io,http://localhost:5173"
+supabase secrets set ICTHUS_ALLOWED_ORIGINS="https://aio-advisors-group.github.io,http://localhost:5173"
 ```
 
 ```bash
@@ -162,7 +162,7 @@ select cron.schedule(
   '*/15 * * * *',
   $$
   select net.http_post(
-    url := 'https://htqqvhxgkqzxcbzcnlzd.supabase.co/functions/v1/delivery-dispatch',
+    url := 'https://drtjcdzwlzevajlubxzc.supabase.co/functions/v1/delivery-dispatch',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'x-scheduler-secret', '<ICTHUS_SCHEDULER_SECRET>'
@@ -177,7 +177,7 @@ select cron.schedule(
   '*/15 * * * *',
   $$
   select net.http_post(
-    url := 'https://htqqvhxgkqzxcbzcnlzd.supabase.co/functions/v1/daily-companion-run',
+    url := 'https://drtjcdzwlzevajlubxzc.supabase.co/functions/v1/daily-companion-run',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'x-scheduler-secret', '<ICTHUS_SCHEDULER_SECRET>'
@@ -198,7 +198,7 @@ Repository → **Settings → Secrets and variables → Actions**:
 
 | Type   | Name                     | Value                                        |
 | ------ | ------------------------ | -------------------------------------------- |
-| Secret | `VITE_SUPABASE_URL`      | `https://htqqvhxgkqzxcbzcnlzd.supabase.co`   |
+| Secret | `VITE_SUPABASE_URL`      | `https://drtjcdzwlzevajlubxzc.supabase.co`   |
 | Secret | `VITE_SUPABASE_ANON_KEY` | Dashboard → Settings → API → `anon` `public` |
 
 Variables (optional, all default to off):
@@ -257,7 +257,7 @@ prints. Emails land in Inbucket at http://localhost:54324.
 
 ## Sharing the project
 
-If `htqqvhxgkqzxcbzcnlzd` already hosts something else:
+If `drtjcdzwlzevajlubxzc` already hosts something else:
 
 - Every Icthus table name is listed in `20260731000001_initial_schema.sql`.
   Check for collisions before pushing.

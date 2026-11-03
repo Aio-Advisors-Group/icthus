@@ -129,7 +129,7 @@ _Requirements: build prompt §5, §6, §7; package non-functional requirements._
 _Requirements: build prompt §9, §10._
 
 - Pages workflow with correct base path and SPA fallback.
-- `SUPABASE_SETUP.md` for the existing project `htqqvhxgkqzxcbzcnlzd`.
+- `SUPABASE_SETUP.md` for the existing project `drtjcdzwlzevajlubxzc`.
 - `docs/PROVIDER_SETUP.md` for YouVersion and Gloo.
 - `docs/build-status.md`.
 

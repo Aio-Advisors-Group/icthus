@@ -38,7 +38,7 @@ Verified against YouVersion's own sign-up documentation, July 2026:
 ### Callback URL to register
 
 ```
-https://bahrcompany.github.io/icthus/auth/callback
+https://aio-advisors-group.github.io/icthus/auth/callback
 ```
 
 Add the local one too if their console accepts multiple:
@@ -177,7 +177,7 @@ shows.
 **Console:** https://api.slack.com/apps
 
 - Bot token scopes: `chat:write`, `channels:read`, `groups:read`
-- Redirect URL: `https://bahrcompany.github.io/icthus/auth/callback`
+- Redirect URL: `https://aio-advisors-group.github.io/icthus/auth/callback`
 
 ```bash
 supabase secrets set SLACK_CLIENT_ID=...
@@ -203,7 +203,7 @@ supabase secrets set DISCORD_BOT_TOKEN=...
 **Console:** https://www.notion.so/my-integrations
 
 - Capabilities: insert content
-- Redirect URL: `https://bahrcompany.github.io/icthus/auth/callback`
+- Redirect URL: `https://aio-advisors-group.github.io/icthus/auth/callback`
 
 ```bash
 supabase secrets set NOTION_CLIENT_ID=...

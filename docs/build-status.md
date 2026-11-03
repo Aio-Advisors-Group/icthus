@@ -82,8 +82,8 @@ Two logins. Both CLIs are installed (`gh` 2.97.0, `supabase` 2.111.0); both
 sign-in flows are interactive and cannot be completed for you.
 
 **Approved target:** `Bahrcompany/icthus`, **public**, deployed to
-`https://bahrcompany.github.io/icthus/`, backed by the existing Supabase
-project `htqqvhxgkqzxcbzcnlzd`.
+`https://aio-advisors-group.github.io/icthus/`, backed by the existing Supabase
+project `drtjcdzwlzevajlubxzc`.
 
 ### 1. GitHub — needs `gh auth login`
 
@@ -114,7 +114,7 @@ supabase login
 ```
 
 ```bash
-cd "icthus" && supabase link --project-ref htqqvhxgkqzxcbzcnlzd
+cd "icthus" && supabase link --project-ref drtjcdzwlzevajlubxzc
 ```
 
 Then follow [`SUPABASE_SETUP.md`](../SUPABASE_SETUP.md) from step 3. It walks
