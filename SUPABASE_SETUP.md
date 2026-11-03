@@ -94,8 +94,8 @@ Dashboard → **Authentication → Providers → Email**:
 
 Dashboard → **Authentication → URL Configuration**:
 
-| Field         | Value                                                                                         |
-| ------------- | --------------------------------------------------------------------------------------------- |
+| Field         | Value                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
 | Site URL      | `https://aio-advisors-group.github.io/icthus/`                                                       |
 | Redirect URLs | `https://aio-advisors-group.github.io/icthus/auth/callback`<br>`http://localhost:5173/auth/callback` |
 
